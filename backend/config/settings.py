@@ -50,7 +50,9 @@ INSTALLED_APPS = [
     "django_filters",
 
     "accounts",
-    "diseases"
+    "diseases",
+    "articles",
+    "quizzes",
 ]
 
 MIDDLEWARE = [
