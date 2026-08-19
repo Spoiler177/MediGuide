@@ -1,3 +1,23 @@
 from django.contrib import admin
 
-# Register your models here.
+from .models import Disease
+
+
+@admin.register(Disease)
+class DiseaseAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "category",
+        "created_at",
+        "updated_at",
+    )
+
+    search_fields = (
+        "name",
+        "category",
+        "description",
+    )
+
+    list_filter = (
+        "category",
+    )
