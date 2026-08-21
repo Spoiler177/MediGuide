@@ -9,4 +9,9 @@ urlpatterns = [
         "api/auth/",
         include("accounts.urls"),
     ),
+
+    path(
+        "api/diseases/",
+        include("diseases.urls"),
+    ),
 ]
