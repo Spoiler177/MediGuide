@@ -6,19 +6,19 @@ from .models import Category, Disease
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = (
+        "id",
         "name",
-        "created_at",
     )
 
     search_fields = (
         "name",
-        "description",
     )
 
 
 @admin.register(Disease)
 class DiseaseAdmin(admin.ModelAdmin):
     list_display = (
+        "id",
         "name",
         "category",
         "created_at",
@@ -27,11 +27,16 @@ class DiseaseAdmin(admin.ModelAdmin):
 
     search_fields = (
         "name",
-        "category__name",
         "description",
         "symptoms",
+        "causes",
     )
 
     list_filter = (
         "category",
+        "created_at",
+    )
+
+    ordering = (
+        "name",
     )
