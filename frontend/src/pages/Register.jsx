@@ -1,45 +1,53 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
+import "./Register.css";
 
 function Register() {
-  const navigate = useNavigate();
-
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     password: "",
+    password2: "",
   });
 
+  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  function handleChange(e) {
+  const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
-  }
+  };
 
-  async function handleSubmit(e) {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
+    setMessage("");
     setError("");
-    setSuccess("");
-    setLoading(true);
+
+    if (formData.password !== formData.password2) {
+      setError("Passwords do not match.");
+      return;
+    }
 
     try {
-      const response = await api.post("auth/register/", formData);
+      const response = await api.post("auth/register/", {
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+      });
 
       console.log(response.data);
 
-      setSuccess("Account created successfully!");
+      setMessage("Account created successfully!");
 
-      setTimeout(() => {
-        navigate("/login");
-      }, 1500);
-
+      setFormData({
+        username: "",
+        email: "",
+        password: "",
+        password2: "",
+      });
     } catch (err) {
       console.error(err);
 
@@ -48,109 +56,102 @@ function Register() {
       } else {
         setError("Could not connect to the server.");
       }
-    } finally {
-      setLoading(false);
     }
-  }
+  };
 
   return (
-    <main className="flex min-h-[80vh] items-center justify-center bg-slate-50 px-6 py-12">
+    <div className="register-page">
 
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-sm">
+      <div className="register-card">
 
-        <h1 className="text-3xl font-bold text-slate-900">
-          Create Account
-        </h1>
+        <div className="register-header">
+          <h1>Create Account</h1>
+          <p>Create your MediGuide account.</p>
+        </div>
 
-        <p className="mt-2 text-slate-600">
-          Create your MediGuide account.
-        </p>
+        {message && (
+          <div className="success-message">
+            {message}
+          </div>
+        )}
 
         {error && (
-          <div className="mt-5 rounded-lg bg-red-50 p-3 text-sm text-red-600">
+          <div className="error-message">
             {error}
           </div>
         )}
 
-        {success && (
-          <div className="mt-5 rounded-lg bg-green-50 p-3 text-sm text-green-600">
-            {success}
-          </div>
-        )}
+        <form onSubmit={handleSubmit}>
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-
-          <div>
-            <label className="mb-2 block font-medium text-slate-700">
-              Username
-            </label>
+          <div className="form-group">
+            <label>Username</label>
 
             <input
               type="text"
               name="username"
+              placeholder="Enter your username"
               value={formData.username}
               onChange={handleChange}
-              placeholder="Your username"
               required
-              className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-teal-500"
             />
           </div>
 
-          <div>
-            <label className="mb-2 block font-medium text-slate-700">
-              Email
-            </label>
+          <div className="form-group">
+            <label>Email</label>
 
             <input
               type="email"
               name="email"
+              placeholder="Enter your email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="you@example.com"
               required
-              className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-teal-500"
             />
           </div>
 
-          <div>
-            <label className="mb-2 block font-medium text-slate-700">
-              Password
-            </label>
+          <div className="form-group">
+            <label>Password</label>
 
             <input
               type="password"
               name="password"
+              placeholder="Enter your password"
               value={formData.password}
               onChange={handleChange}
-              placeholder="Create a password"
               required
-              className="w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-teal-500"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Confirm Password</label>
+
+            <input
+              type="password"
+              name="password2"
+              placeholder="Confirm your password"
+              value={formData.password2}
+              onChange={handleChange}
+              required
             />
           </div>
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-teal-600 py-3 font-semibold text-white hover:bg-teal-700 disabled:opacity-50"
+            className="register-button"
           >
-            {loading ? "Creating Account..." : "Create Account"}
+            Create Account
           </button>
 
         </form>
 
-        <p className="mt-6 text-center text-sm text-slate-600">
+        <div className="login-link">
           Already have an account?{" "}
-          <Link
-            to="/login"
-            className="font-semibold text-teal-600 hover:text-teal-700"
-          >
-            Login
-          </Link>
-        </p>
+          <a href="/login">Login</a>
+        </div>
 
       </div>
 
-    </main>
+    </div>
   );
 }
 
