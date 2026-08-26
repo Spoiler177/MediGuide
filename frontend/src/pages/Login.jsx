@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
 
 function Login() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    email: "",
     username: "",
     password: "",
   });
@@ -14,6 +13,7 @@ function Login() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Handle input changes
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -21,6 +21,7 @@ function Login() {
     });
   };
 
+  // Handle login
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -30,23 +31,48 @@ function Login() {
     try {
       const response = await api.post("auth/login/", {
         username: formData.username,
-        email: formData.email,
         password: formData.password,
       });
 
       // Save JWT tokens
-      localStorage.setItem("access_token", response.data.access);
-      localStorage.setItem("refresh_token", response.data.refresh);
+      localStorage.setItem(
+        "access_token",
+        response.data.access
+      );
 
-      // Go to homepage
+      localStorage.setItem(
+        "refresh_token",
+        response.data.refresh
+      );
+
+      // Login successful
       navigate("/");
+
     } catch (err) {
-      console.error(err);
+      console.error("Login error:", err);
 
       if (err.response?.data) {
-        setError(JSON.stringify(err.response.data));
+        const data = err.response.data;
+
+        if (typeof data === "object") {
+          const messages = Object.entries(data)
+            .map(([field, value]) => {
+              const message = Array.isArray(value)
+                ? value.join(" ")
+                : value;
+
+              return `${field}: ${message}`;
+            })
+            .join(" ");
+
+          setError(messages);
+        } else {
+          setError("Invalid username or password.");
+        }
       } else {
-        setError("Could not connect to the server.");
+        setError(
+          "Could not connect to the server. Make sure Django is running."
+        );
       }
     } finally {
       setLoading(false);
@@ -54,104 +80,165 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-teal-50 flex items-center justify-center px-4">
+    <div className="auth-page">
 
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+      {/* =========================
+          BRAND
+      ========================== */}
 
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-blue-900">
+      <div className="auth-brand">
+
+        <Link to="/" className="auth-logo">
+          Medi<span>Guide</span>
+        </Link>
+
+        <p>
+          Your trusted platform for health education.
+        </p>
+
+      </div>
+
+
+      {/* =========================
+          LOGIN CARD
+      ========================== */}
+
+      <div className="auth-card">
+
+        <div className="auth-header">
+
+          <div className="auth-icon">
+            🔐
+          </div>
+
+          <h1>
             Welcome Back
           </h1>
 
-          <p className="text-gray-600 mt-2">
-            Login to your MediGuide account.
+          <p>
+            Login to continue your MediGuide journey.
           </p>
+
         </div>
 
-        {/* Error */}
+
+        {/* =========================
+            ERROR MESSAGE
+        ========================== */}
+
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 rounded-lg p-3 mb-6 text-sm">
+          <div className="auth-error">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
 
-          {/* Email */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email
-            </label>
+        {/* =========================
+            LOGIN FORM
+        ========================== */}
 
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Enter your email"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
+        <form onSubmit={handleSubmit}>
 
-          {/* Username */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+          {/* USERNAME */}
+
+          <div className="form-group">
+
+            <label htmlFor="username">
               Username
             </label>
 
             <input
+              id="username"
               type="text"
               name="username"
               value={formData.username}
               onChange={handleChange}
               placeholder="Enter your username"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              autoComplete="username"
               required
             />
+
           </div>
 
-          {/* Password */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+
+          {/* PASSWORD */}
+
+          <div className="form-group">
+
+            <label htmlFor="password">
               Password
             </label>
 
             <input
+              id="password"
               type="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
               placeholder="Enter your password"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              autoComplete="current-password"
               required
             />
+
           </div>
 
-          {/* Button */}
+
+          {/* FORGOT PASSWORD */}
+
+          <div className="forgot-password">
+
+            <a
+              href="#"
+              onClick={(e) => e.preventDefault()}
+            >
+              Forgot password?
+            </a>
+
+          </div>
+
+
+          {/* LOGIN BUTTON */}
+
           <button
             type="submit"
+            className="auth-submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition duration-200 disabled:opacity-50"
           >
-            {loading ? "Logging in..." : "Login"}
+            {loading
+              ? "Logging in..."
+              : "Login"}
           </button>
 
         </form>
 
-        {/* Register */}
-        <p className="text-center text-gray-600 mt-6">
-          Don't have an account?{" "}
-          <button
-            onClick={() => navigate("/register")}
-            className="text-blue-600 font-semibold hover:underline"
-          >
+
+        {/* =========================
+            REGISTER LINK
+        ========================== */}
+
+        <div className="auth-footer">
+
+          Don't have an account?
+
+          <Link to="/register">
             Create Account
-          </button>
-        </p>
+          </Link>
+
+        </div>
 
       </div>
+
+
+      {/* =========================
+          COPYRIGHT
+      ========================== */}
+
+      <div className="auth-bottom">
+
+        © 2026 MediGuide. Educational health information platform.
+
+      </div>
+
     </div>
   );
 }

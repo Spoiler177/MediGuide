@@ -1,17 +1,19 @@
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
-import "./Register.css";
 
 function Register() {
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     password: "",
-    password2: "",
+    confirmPassword: "",
   });
 
-  const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -22,61 +24,84 @@ function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    setMessage("");
     setError("");
 
-    if (formData.password !== formData.password2) {
+    if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match.");
       return;
     }
 
+    if (formData.password.length < 8) {
+      setError("Password must contain at least 8 characters.");
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      const response = await api.post("auth/register/", {
+      await api.post("auth/register/", {
         username: formData.username,
         email: formData.email,
         password: formData.password,
       });
 
-      console.log(response.data);
-
-      setMessage("Account created successfully!");
-
-      setFormData({
-        username: "",
-        email: "",
-        password: "",
-        password2: "",
-      });
+      navigate("/login");
     } catch (err) {
-      console.error(err);
-
       if (err.response?.data) {
-        setError(JSON.stringify(err.response.data));
+        const data = err.response.data;
+
+        if (typeof data === "object") {
+          const messages = Object.entries(data)
+            .map(([field, value]) => {
+              const message = Array.isArray(value)
+                ? value.join(" ")
+                : value;
+
+              return `${field}: ${message}`;
+            })
+            .join(" ");
+
+          setError(messages);
+        } else {
+          setError("Registration failed.");
+        }
       } else {
         setError("Could not connect to the server.");
       }
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="register-page">
+    <div className="auth-page">
 
-      <div className="register-card">
+      <div className="auth-brand">
+        <Link to="/" className="auth-logo">
+          Medi<span>Guide</span>
+        </Link>
 
-        <div className="register-header">
+        <p>
+          Your trusted platform for health education.
+        </p>
+      </div>
+
+      <div className="auth-card">
+
+        <div className="auth-header">
+          <div className="auth-icon">
+            🩺
+          </div>
+
           <h1>Create Account</h1>
-          <p>Create your MediGuide account.</p>
+
+          <p>
+            Join MediGuide and start learning about your health.
+          </p>
         </div>
 
-        {message && (
-          <div className="success-message">
-            {message}
-          </div>
-        )}
-
         {error && (
-          <div className="error-message">
+          <div className="auth-error">
             {error}
           </div>
         )}
@@ -89,9 +114,9 @@ function Register() {
             <input
               type="text"
               name="username"
-              placeholder="Enter your username"
               value={formData.username}
               onChange={handleChange}
+              placeholder="Enter your username"
               required
             />
           </div>
@@ -102,9 +127,9 @@ function Register() {
             <input
               type="email"
               name="email"
-              placeholder="Enter your email"
               value={formData.email}
               onChange={handleChange}
+              placeholder="you@example.com"
               required
             />
           </div>
@@ -115,9 +140,9 @@ function Register() {
             <input
               type="password"
               name="password"
-              placeholder="Enter your password"
               value={formData.password}
               onChange={handleChange}
+              placeholder="Create a password"
               required
             />
           </div>
@@ -127,28 +152,36 @@ function Register() {
 
             <input
               type="password"
-              name="password2"
-              placeholder="Confirm your password"
-              value={formData.password2}
+              name="confirmPassword"
+              value={formData.confirmPassword}
               onChange={handleChange}
+              placeholder="Confirm your password"
               required
             />
           </div>
 
           <button
             type="submit"
-            className="register-button"
+            className="auth-submit"
+            disabled={loading}
           >
-            Create Account
+            {loading ? "Creating Account..." : "Create Account"}
           </button>
 
         </form>
 
-        <div className="login-link">
-          Already have an account?{" "}
-          <a href="/login">Login</a>
+        <div className="auth-footer">
+          Already have an account?
+
+          <Link to="/login">
+            Login
+          </Link>
         </div>
 
+      </div>
+
+      <div className="auth-bottom">
+        © 2026 MediGuide. Educational health information platform.
       </div>
 
     </div>
